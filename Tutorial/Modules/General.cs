@@ -38,7 +38,7 @@ namespace Tutorial.Modules
             {
                 var builder = new EmbedBuilder()
                     .WithThumbnailUrl(user.GetAvatarUrl() ?? user.GetDefaultAvatarUrl())
-                    .WithDescription("In this message you can see some information about yourself!")
+                    .WithDescription($"In this message you can see some information about {user.Username}!")
                     .WithColor(new Color(33, 176, 252))
                     .AddField("User ID", user.Id, true)
                     .AddField("Created at", user.CreatedAt.ToString("dd/MM/yyyy"), true)
@@ -48,18 +48,6 @@ namespace Tutorial.Modules
                 var embed = builder.Build();
                 await Context.Channel.SendMessageAsync(null, false, embed);
             }
-        }
-
-        [Command("purge")]
-        [RequireUserPermission(GuildPermission.ManageMessages)]
-        public async Task Purge(int amount)
-        {
-            var messages = await Context.Channel.GetMessagesAsync(amount + 1).FlattenAsync();
-            await (Context.Channel as SocketTextChannel).DeleteMessagesAsync(messages);
-
-            var message = await Context.Channel.SendMessageAsync($"{messages.Count()} messages deleted successfuly!");
-            await Task.Delay(2500);
-            await message.DeleteAsync();
         }
 
         [Command("server")]
