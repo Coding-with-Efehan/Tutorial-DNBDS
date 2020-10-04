@@ -16,14 +16,12 @@ namespace Template.Modules
         public async Task PingAsync()
         {
             await ReplyAsync("Pong!");
-            _logger.LogInformation($"{Context.User.Username} executed the ping command!");
         }
 
         [Command("echo")]
         public async Task EchoAsync([Remainder] string text)
         {
             await ReplyAsync(text);
-            _logger.LogInformation($"{Context.User.Username} executed the echo command!");
         }
 
         [Command("math")]
@@ -31,9 +29,8 @@ namespace Template.Modules
         {
             var dt = new DataTable();
             var result = dt.Compute(math, null);
-            
+
             await ReplyAsync($"Result: {result}");
-            _logger.LogInformation($"{Context.User.Username} executed the math command!");
         }
     }
 }

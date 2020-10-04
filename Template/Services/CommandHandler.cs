@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,8 +29,35 @@ namespace Template.Services
         public override async Task InitializeAsync(CancellationToken cancellationToken)
         {
             _client.MessageReceived += OnMessageReceived;
+            _client.ChannelCreated += OnChannelCreated;
+            _client.JoinedGuild += OnJoinedGuild;
+            _client.ReactionAdded += OnReactionAdded;
+
             _service.CommandExecuted += OnCommandExecuted;
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
+        }
+
+        private async Task OnReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
+        {
+            if (arg3.MessageId != 762293973137227776) return;
+
+            if (arg3.Emote.Name != "✅") return;
+
+            var role = (arg2 as SocketGuildChannel).Guild.Roles.FirstOrDefault(x => x.Id == messageid);
+            await (arg3.User.Value as SocketGuildUser).AddRoleAsync(role);
+        }
+
+        private async Task OnJoinedGuild(SocketGuild arg)
+        {
+            await arg.DefaultChannel.SendMessageAsync("Thank you for using my Discord bot.");
+        }
+
+        private async Task OnChannelCreated(SocketChannel arg)
+        {
+            if ((arg as ITextChannel) == null) return;
+            var channel = arg as ITextChannel;
+
+            await channel.SendMessageAsync("The event was called!");
         }
 
         private async Task OnMessageReceived(SocketMessage arg)
