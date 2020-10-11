@@ -1,6 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template", "Template\Template.csproj", "{002754CB-D182-436F-9B1E-1E247BCAA329}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30517.126
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Template", "Template\Template.csproj", "{002754CB-D182-436F-9B1E-1E247BCAA329}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{865DB8BD-02F6-4FCD-8078-C86B63418F3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +17,15 @@ Global
 		{002754CB-D182-436F-9B1E-1E247BCAA329}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{002754CB-D182-436F-9B1E-1E247BCAA329}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{002754CB-D182-436F-9B1E-1E247BCAA329}.Release|Any CPU.Build.0 = Release|Any CPU
+		{865DB8BD-02F6-4FCD-8078-C86B63418F3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{865DB8BD-02F6-4FCD-8078-C86B63418F3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{865DB8BD-02F6-4FCD-8078-C86B63418F3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{865DB8BD-02F6-4FCD-8078-C86B63418F3C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8DCEBCB8-505B-4E05-9B8B-BAFC1CD7924B}
 	EndGlobalSection
 EndGlobal

@@ -11,10 +11,14 @@
       <PackageReference Include="Discord.Net.Commands" Version="2.2.0" />
       <PackageReference Include="Discord.Net.Core" Version="2.2.0" />
       <PackageReference Include="Discord.Net.WebSocket" Version="2.2.0" />
-      <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.7" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.7" />
-      <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.7" />
-      <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.7" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.8" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.8" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.8" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.8" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
     </ItemGroup>
 
     <ItemGroup>
