@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Template.Services;
+using Template.Utilities;
 
 namespace Template
 {
@@ -57,7 +58,8 @@ namespace Template
                     services
                     .AddHostedService<CommandHandler>()
                     .AddDbContext<TutorialContext>()
-                    .AddSingleton<Servers>();
+                    .AddSingleton<Servers>()
+                    .AddSingleton<Images>();
                 })
                 .UseConsoleLifetime();
             

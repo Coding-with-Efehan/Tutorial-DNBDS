@@ -145,6 +145,14 @@
             "Microsoft.Extensions.Logging": {
               "target": "Package",
               "version": "[3.1.8, )"
+            },
+            "System.Drawing.Common": {
+              "target": "Package",
+              "version": "[4.7.0, )"
+            },
+            "System.Drawing.Primitives": {
+              "target": "Package",
+              "version": "[4.3.0, )"
             }
           },
           "imports": [

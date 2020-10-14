@@ -1,8 +1,11 @@
 ﻿using System.Data;
+using System.IO;
 using System.Threading.Tasks;
 using Discord.Commands;
+using Discord.WebSocket;
 using Infrastructure;
 using Microsoft.Extensions.Logging;
+using Template.Utilities;
 
 namespace Template.Modules
 {
@@ -10,11 +13,13 @@ namespace Template.Modules
     {
         private readonly ILogger<ExampleModule> _logger;
         private readonly Servers _servers;
+        private readonly Images _images;
 
-        public ExampleModule(ILogger<ExampleModule> logger, Servers servers)
+        public ExampleModule(ILogger<ExampleModule> logger, Servers servers, Images images)
         {
             _logger = logger;
             _servers = servers;
+            _images = images;
         }
 
         [Command("ping")]
@@ -57,6 +62,14 @@ namespace Template.Modules
 
             await _servers.ModifyGuildPrefix(Context.Guild.Id, prefix);
             await ReplyAsync($"The prefix has been adjusted to `{prefix}`.");
+        }
+
+        [Command("image", RunMode = RunMode.Async)]
+        public async Task Image(SocketGuildUser user)
+        {
+            var path = await _images.CreateImageAsync(user);
+            await Context.Channel.SendFileAsync(path);
+            File.Delete(path);
         }
     }
 }
