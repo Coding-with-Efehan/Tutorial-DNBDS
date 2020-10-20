@@ -59,7 +59,11 @@ namespace Template
                     .AddHostedService<CommandHandler>()
                     .AddDbContext<TutorialContext>()
                     .AddSingleton<Servers>()
-                    .AddSingleton<Images>();
+                    .AddSingleton<Images>()
+                    .AddSingleton<Ranks>()
+                    .AddSingleton<AutoRoles>()
+                    .AddSingleton<RanksHelper>()
+                    .AddSingleton<AutoRolesHelper>();
                 })
                 .UseConsoleLifetime();
             

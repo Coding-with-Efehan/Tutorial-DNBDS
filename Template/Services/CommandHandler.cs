@@ -9,6 +9,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Infrastructure;
 using Microsoft.Extensions.Configuration;
+using Template.Utilities;
 
 namespace Template.Services
 {
@@ -19,48 +20,34 @@ namespace Template.Services
         private readonly CommandService _service;
         private readonly IConfiguration _config;
         private readonly Servers _servers;
+        private readonly AutoRolesHelper _autoRolesHelper;
 
-        public CommandHandler(IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, Servers servers)
+        public CommandHandler(IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, Servers servers, AutoRolesHelper autoRolesHelper)
         {
             _provider = provider;
             _client = client;
             _service = service;
             _config = config;
             _servers = servers;
+            _autoRolesHelper = autoRolesHelper;
         }
 
         public override async Task InitializeAsync(CancellationToken cancellationToken)
         {
             _client.MessageReceived += OnMessageReceived;
-            _client.ChannelCreated += OnChannelCreated;
-            _client.JoinedGuild += OnJoinedGuild;
-            _client.ReactionAdded += OnReactionAdded;
+            _client.UserJoined += OnUserJoined;
 
             _service.CommandExecuted += OnCommandExecuted;
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
         }
 
-        private async Task OnReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
+        private async Task OnUserJoined(SocketGuildUser arg)
         {
-            if (arg3.MessageId != 762293973137227776) return;
+            var roles = await _autoRolesHelper.GetAutoRolesAsync(arg.Guild);
+            if (roles.Count < 1)
+                return;
 
-            if (arg3.Emote.Name != "✅") return;
-
-            var role = (arg2 as SocketGuildChannel).Guild.Roles.FirstOrDefault(x => x.Id == 123);
-            await (arg3.User.Value as SocketGuildUser).AddRoleAsync(role);
-        }
-
-        private async Task OnJoinedGuild(SocketGuild arg)
-        {
-            await arg.DefaultChannel.SendMessageAsync("Thank you for using my Discord bot.");
-        }
-
-        private async Task OnChannelCreated(SocketChannel arg)
-        {
-            if ((arg as ITextChannel) == null) return;
-            var channel = arg as ITextChannel;
-
-            await channel.SendMessageAsync("The event was called!");
+            await arg.AddRolesAsync(roles);
         }
 
         private async Task OnMessageReceived(SocketMessage arg)

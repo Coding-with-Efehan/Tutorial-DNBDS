@@ -1,6 +1,9 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Infrastructure;
@@ -12,14 +15,14 @@ namespace Template.Modules
     public class ExampleModule : ModuleBase<SocketCommandContext>
     {
         private readonly ILogger<ExampleModule> _logger;
-        private readonly Servers _servers;
         private readonly Images _images;
+        private readonly RanksHelper _ranksHelper;
 
-        public ExampleModule(ILogger<ExampleModule> logger, Servers servers, Images images)
+        public ExampleModule(ILogger<ExampleModule> logger, Images images, RanksHelper ranksHelper)
         {
             _logger = logger;
-            _servers = servers;
             _images = images;
+            _ranksHelper = ranksHelper;
         }
 
         [Command("ping")]
@@ -43,33 +46,61 @@ namespace Template.Modules
             await ReplyAsync($"Result: {result}");
         }
 
-        [Command("prefix")]
-        [RequireUserPermission(Discord.GuildPermission.Administrator)]
-        public async Task Prefix(string prefix = null)
-        {
-            if(prefix == null)
-            {
-                var guildPrefix = await _servers.GetGuildPrefix(Context.Guild.Id) ?? "!";
-                await ReplyAsync($"The current prefix of this bot is `{guildPrefix}`.");
-                return;
-            }
-
-            if(prefix.Length > 8)
-            {
-                await ReplyAsync("The length of the new prefix is too long!");
-                return;
-            }
-
-            await _servers.ModifyGuildPrefix(Context.Guild.Id, prefix);
-            await ReplyAsync($"The prefix has been adjusted to `{prefix}`.");
-        }
-
         [Command("image", RunMode = RunMode.Async)]
         public async Task Image(SocketGuildUser user)
         {
             var path = await _images.CreateImageAsync(user);
             await Context.Channel.SendFileAsync(path);
             File.Delete(path);
+        }
+
+        [Command("rank", RunMode = RunMode.Async)]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        public async Task Rank([Remainder]string identifier)
+        {
+            await Context.Channel.TriggerTypingAsync();
+            var ranks = await _ranksHelper.GetRanksAsync(Context.Guild);
+
+            IRole role;
+
+            if(ulong.TryParse(identifier, out ulong roleId))
+            {
+                var roleById = Context.Guild.Roles.FirstOrDefault(x => x.Id == roleId);
+                if(roleById == null)
+                {
+                    await ReplyAsync("That role does not exist!");
+                    return;
+                }
+
+                role = roleById;
+            }
+            else
+            {
+                var roleByName = Context.Guild.Roles.FirstOrDefault(x => string.Equals(x.Name, identifier, StringComparison.CurrentCultureIgnoreCase));
+                if(roleByName == null)
+                {
+                    await ReplyAsync("That role does not exist!");
+                    return;
+                }
+
+                role = roleByName;
+            }
+
+            if(ranks.Any(x => x.Id != role.Id))
+            {
+                await ReplyAsync("That rank does not exist!");
+                return;
+            }
+
+            if((Context.User as SocketGuildUser).Roles.Any(x => x.Id == role.Id))
+            {
+                await (Context.User as SocketGuildUser).RemoveRoleAsync(role);
+                await ReplyAsync($"Succesfully removed the rank {role.Mention} from you.");
+                return;
+            }
+
+            await (Context.User as SocketGuildUser).AddRoleAsync(role);
+            await ReplyAsync($"Succesfully added the rank {role.Mention} to you.");
         }
     }
 }
