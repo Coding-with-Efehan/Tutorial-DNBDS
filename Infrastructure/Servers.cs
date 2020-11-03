@@ -38,5 +38,65 @@ namespace Infrastructure
 
             return await Task.FromResult(prefix);
         }
+
+        public async Task ModifyWelcomeAsync(ulong id, ulong channelId)
+        {
+            var server = await _context.Servers
+                .FindAsync(id);
+
+            if (server == null)
+                _context.Add(new Server { Id = id, Welcome = channelId });
+            else
+                server.Welcome = channelId;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task ClearWelcomeAsync(ulong id)
+        {
+            var server = await _context.Servers
+                .FindAsync(id);
+
+            server.Welcome = 0;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<ulong> GetWelcomeAsync(ulong id)
+        {
+            var server = await _context.Servers
+                .FindAsync(id);
+
+            return await Task.FromResult(server.Welcome);
+        }
+
+        public async Task ModifyBackgroundAsync(ulong id, string url)
+        {
+            var server = await _context.Servers
+                .FindAsync(id);
+
+            if (server == null)
+                _context.Add(new Server { Id = id, Background = url });
+            else
+                server.Background = url;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task ClearBackgroundAsync(ulong id)
+        {
+            var server = await _context.Servers
+                .FindAsync(id);
+
+            server.Background = null;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<string> GetBackgroundAsync(ulong id)
+        {
+            var server = await _context.Servers
+                .FindAsync(id);
+
+            return await Task.FromResult(server.Background);
+        }
     }
 }

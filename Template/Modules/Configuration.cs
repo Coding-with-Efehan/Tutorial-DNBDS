@@ -4,6 +4,7 @@ using Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Template.Utilities;
@@ -202,6 +203,81 @@ namespace Template.Modules
 
             await _autoRoles.RemoveAutoRoleAsync(Context.Guild.Id, role.Id);
             await ReplyAsync($"The role {role.Mention} has been removed from the autoroles!");
+        }
+
+        [Command("welcome")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task Welcome(string option = null, string value = null)
+        {
+            if(option == null && value == null)
+            {
+                var fetchedChannelId = await _servers.GetWelcomeAsync(Context.Guild.Id);
+                if(fetchedChannelId == 0)
+                {
+                    await ReplyAsync("There has not been set a welcome channel yet!");
+                    return;
+                }
+
+                var fetchedChannel = Context.Guild.GetTextChannel(fetchedChannelId);
+                if(fetchedChannel == null)
+                {
+                    await ReplyAsync("There has not been set a welcome channel yet!");
+                    await _servers.ClearWelcomeAsync(Context.Guild.Id);
+                    return;
+                }
+
+                var fetchedBackground = await _servers.GetBackgroundAsync(Context.Guild.Id);
+
+                if (fetchedBackground != null)
+                    await ReplyAsync($"The channel used for the welcome module is {fetchedChannel.Mention}.\nThe background is set to {fetchedBackground}.");
+                else
+                    await ReplyAsync($"The channel used for the welcome module is {fetchedChannel.Mention}.");
+
+                return;
+            }
+
+            if(option == "channel" && value != null)
+            {
+                if(!MentionUtils.TryParseChannel(value, out ulong parsedId))
+                {
+                    await ReplyAsync("Please pass in a valid channel!");
+                    return;
+                }
+
+                var parsedChannel = Context.Guild.GetTextChannel(parsedId);
+                if(parsedChannel == null)
+                {
+                    await ReplyAsync("Please pass in a valid channel!");
+                    return;
+                }
+
+                await _servers.ModifyWelcomeAsync(Context.Guild.Id, parsedId);
+                await ReplyAsync($"Successfully modified the welcome channel to {parsedChannel.Mention}.");
+                return;
+            }
+
+            if (option == "background" && value != null)
+            {
+                if (value == "clear")
+                {
+                    await _servers.ClearBackgroundAsync(Context.Guild.Id);
+                    await ReplyAsync("Successfully cleared the background for this server.");
+                    return;
+                }
+
+                await _servers.ModifyBackgroundAsync(Context.Guild.Id, value);
+                await ReplyAsync($"Successfully modified the background to {value}.");
+                return;
+            }
+
+            if(option == "clear" && value == null)
+            {
+                await _servers.ClearWelcomeAsync(Context.Guild.Id);
+                await ReplyAsync("Successfully cleared the welcome channel.");
+                return;
+            }
+
+            await ReplyAsync("You did not use this command properly.");
         }
     }
 }

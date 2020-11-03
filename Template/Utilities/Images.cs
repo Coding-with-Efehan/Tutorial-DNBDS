@@ -11,10 +11,10 @@ namespace Template.Utilities
 {
     public class Images
     {
-        public async Task<string> CreateImageAsync(SocketGuildUser user)
+        public async Task<string> CreateImageAsync(SocketGuildUser user, string url = "https://images.unsplash.com/photo-1602408959965-cbde35cfab50?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=933&q=80")
         {
             var avatar = await FetchImageAsync(user.GetAvatarUrl(size: 2048, format: Discord.ImageFormat.Png) ?? user.GetDefaultAvatarUrl());
-            var background = await FetchImageAsync("https://images.unsplash.com/photo-1602408959965-cbde35cfab50?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=933&q=80");
+            var background = await FetchImageAsync(url);
 
             background = CropToBanner(background);
             avatar = ClipImageToCircle(avatar);

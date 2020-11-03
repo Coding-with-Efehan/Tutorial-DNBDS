@@ -21,8 +21,9 @@ namespace Template.Services
         private readonly IConfiguration _config;
         private readonly Servers _servers;
         private readonly AutoRolesHelper _autoRolesHelper;
+        private readonly Images _images;
 
-        public CommandHandler(IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, Servers servers, AutoRolesHelper autoRolesHelper)
+        public CommandHandler(IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, Servers servers, AutoRolesHelper autoRolesHelper, Images images)
         {
             _provider = provider;
             _client = client;
@@ -30,6 +31,7 @@ namespace Template.Services
             _config = config;
             _servers = servers;
             _autoRolesHelper = autoRolesHelper;
+            _images = images;
         }
 
         public override async Task InitializeAsync(CancellationToken cancellationToken)
@@ -43,11 +45,32 @@ namespace Template.Services
 
         private async Task OnUserJoined(SocketGuildUser arg)
         {
+            var newTask = new Task(async () => await HandleUserJoined(arg));
+            newTask.Start();
+        }
+
+        private async Task HandleUserJoined(SocketGuildUser arg)
+        {
             var roles = await _autoRolesHelper.GetAutoRolesAsync(arg.Guild);
-            if (roles.Count < 1)
+            if (roles.Count > 0)
+                await arg.AddRolesAsync(roles);
+
+            var channelId = await _servers.GetWelcomeAsync(arg.Guild.Id);
+            if (channelId == 0)
                 return;
 
-            await arg.AddRolesAsync(roles);
+            var channel = arg.Guild.GetTextChannel(channelId);
+            if(channel == null)
+            {
+                await _servers.ClearWelcomeAsync(arg.Guild.Id);
+                return;
+            }
+
+            var background = await _servers.GetBackgroundAsync(arg.Guild.Id);
+            string path = await _images.CreateImageAsync(arg, background);
+
+            await channel.SendFileAsync(path, null);
+            System.IO.File.Delete(path);
         }
 
         private async Task OnMessageReceived(SocketMessage arg)
