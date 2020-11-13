@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -8,6 +9,8 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Infrastructure;
 using Microsoft.Extensions.Logging;
+using Template.Common;
+using Template.Services;
 using Template.Utilities;
 
 namespace Template.Modules
@@ -43,15 +46,8 @@ namespace Template.Modules
             var dt = new DataTable();
             var result = dt.Compute(math, null);
 
-            await ReplyAsync($"Result: {result}");
-        }
-
-        [Command("image", RunMode = RunMode.Async)]
-        public async Task Image(SocketGuildUser user)
-        {
-            var path = await _images.CreateImageAsync(user);
-            await Context.Channel.SendFileAsync(path);
-            File.Delete(path);
+            var message = await Context.Channel.SendSuccessAsync("Success", $"The result was {result}.");
+            await message.DeleteAsync();
         }
 
         [Command("rank", RunMode = RunMode.Async)]
@@ -101,6 +97,76 @@ namespace Template.Modules
 
             await (Context.User as SocketGuildUser).AddRoleAsync(role);
             await ReplyAsync($"Succesfully added the rank {role.Mention} to you.");
+        }
+
+        [Command("mute")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        public async Task Mute(SocketGuildUser user, int minutes, [Remainder]string reason = null)
+        {
+            if(user.Hierarchy > Context.Guild.CurrentUser.Hierarchy)
+            {
+                await Context.Channel.SendErrorAsync("Invalid user", "That user has a higher position than the bot.");
+                return;
+            }
+
+            var role = (Context.Guild as IGuild).Roles.FirstOrDefault(x => x.Name == "Muted");
+            if(role == null)
+                role = await Context.Guild.CreateRoleAsync("Muted", new GuildPermissions(sendMessages: false), null, false, null);
+
+            if(role.Position > Context.Guild.CurrentUser.Hierarchy)
+            {
+                await Context.Channel.SendErrorAsync("Invalid permissions", "The muted role has a higher position than the bot.");
+                return;
+            }
+
+            if(user.Roles.Contains(role))
+            {
+                await Context.Channel.SendErrorAsync("Already muted", "That user is already muted.");
+                return;
+            }
+
+            await role.ModifyAsync(x => x.Position = Context.Guild.CurrentUser.Hierarchy);
+
+            foreach(var channel in Context.Guild.TextChannels)
+            {
+                if(!channel.GetPermissionOverwrite(role).HasValue || channel.GetPermissionOverwrite(role).Value.SendMessages == PermValue.Allow)
+                {
+                    await channel.AddPermissionOverwriteAsync(role, new OverwritePermissions(sendMessages: PermValue.Deny));
+                }
+            }
+
+            CommandHandler.Mutes.Add(new Mute { Guild = Context.Guild, User = user, End = DateTime.Now + TimeSpan.FromMinutes(minutes), Role = role });
+            await user.AddRoleAsync(role);
+            await Context.Channel.SendSuccessAsync($"Muted {user.Username}", $"Duration: {minutes} minutes\nReason: {reason ?? "None"}");
+        }
+
+        [Command("unmute")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        public async Task Unmute(SocketGuildUser user)
+        {
+            var role = (Context.Guild as IGuild).Roles.FirstOrDefault(x => x.Name == "Muted");
+            if (role == null)
+            {
+                await Context.Channel.SendErrorAsync("Not muted", "This person has not been muted yet.");
+                return;
+            }
+
+            if (role.Position > Context.Guild.CurrentUser.Hierarchy)
+            {
+                await Context.Channel.SendErrorAsync("Invalid permissions", "The muted role has a higher position than the bot.");
+                return;
+            }
+
+            if (!user.Roles.Contains(role))
+            {
+                await Context.Channel.SendErrorAsync("Not muted", "This person has not been muted yet.");
+                return;
+            }
+
+            await user.RemoveRoleAsync(role);
+            await Context.Channel.SendSuccessAsync($"Unmuted {user.Username}", $"Successfully unmuted the user.");
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -9,6 +10,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Infrastructure;
 using Microsoft.Extensions.Configuration;
+using Template.Common;
 using Template.Utilities;
 
 namespace Template.Services
@@ -22,6 +24,7 @@ namespace Template.Services
         private readonly Servers _servers;
         private readonly AutoRolesHelper _autoRolesHelper;
         private readonly Images _images;
+        public static List<Mute> Mutes = new List<Mute>();
 
         public CommandHandler(IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, Servers servers, AutoRolesHelper autoRolesHelper, Images images)
         {
@@ -39,8 +42,54 @@ namespace Template.Services
             _client.MessageReceived += OnMessageReceived;
             _client.UserJoined += OnUserJoined;
 
+            var newTask = new Task(async () => await MuteHandler());
+            newTask.Start();
+
             _service.CommandExecuted += OnCommandExecuted;
             await _service.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
+        }
+
+        private async Task MuteHandler()
+        {
+            List<Mute> Remove = new List<Mute>();
+
+            foreach(var mute in Mutes)
+            {
+                if (DateTime.Now < mute.End)
+                    continue;
+
+                var guild = _client.GetGuild(mute.Guild.Id);
+
+                if(guild.GetRole(mute.Role.Id) == null)
+                {
+                    Remove.Add(mute);
+                    continue;
+                }
+
+                var role = guild.GetRole(mute.Role.Id);
+
+                if(guild.GetUser(mute.User.Id) == null)
+                {
+                    Remove.Add(mute);
+                    continue;
+                }
+
+                var user = guild.GetUser(mute.User.Id);
+
+                if(role.Position > guild.CurrentUser.Hierarchy)
+                {
+                    Remove.Add(mute);
+                    continue;
+                }
+
+                await user.RemoveRoleAsync(mute.Role);
+                Remove.Add(mute);
+            }
+
+            Mutes = Mutes.Except(Remove).ToList();
+
+            await Task.Delay(1 * 60 * 1000);
+            await MuteHandler();
         }
 
         private async Task OnUserJoined(SocketGuildUser arg)
@@ -88,7 +137,7 @@ namespace Template.Services
 
         private async Task OnCommandExecuted(Optional<CommandInfo> command, ICommandContext context, IResult result)
         {
-            if (command.IsSpecified && !result.IsSuccess) await context.Channel.SendMessageAsync($"Error: {result}");
+            if (command.IsSpecified && !result.IsSuccess) await (context.Channel as ISocketMessageChannel).SendErrorAsync("Error", result.ErrorReason);
         }
     }
 }
