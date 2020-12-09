@@ -22,18 +22,18 @@ namespace Template.Services
         private readonly CommandService _service;
         private readonly IConfiguration _config;
         private readonly Servers _servers;
-        private readonly AutoRolesHelper _autoRolesHelper;
+        private readonly ServerHelper _serverHelper;
         private readonly Images _images;
         public static List<Mute> Mutes = new List<Mute>();
 
-        public CommandHandler(IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, Servers servers, AutoRolesHelper autoRolesHelper, Images images)
+        public CommandHandler(IServiceProvider provider, DiscordSocketClient client, CommandService service, IConfiguration config, Servers servers, ServerHelper serverHelper, Images images)
         {
             _provider = provider;
             _client = client;
             _service = service;
             _config = config;
             _servers = servers;
-            _autoRolesHelper = autoRolesHelper;
+            _serverHelper = serverHelper;
             _images = images;
         }
 
@@ -100,7 +100,7 @@ namespace Template.Services
 
         private async Task HandleUserJoined(SocketGuildUser arg)
         {
-            var roles = await _autoRolesHelper.GetAutoRolesAsync(arg.Guild);
+            var roles = await _serverHelper.GetAutoRolesAsync(arg.Guild);
             if (roles.Count > 0)
                 await arg.AddRolesAsync(roles);
 

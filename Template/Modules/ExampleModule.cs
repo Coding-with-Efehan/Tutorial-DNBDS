@@ -19,19 +19,27 @@ namespace Template.Modules
     {
         private readonly ILogger<ExampleModule> _logger;
         private readonly Images _images;
-        private readonly RanksHelper _ranksHelper;
+        private readonly ServerHelper _serverHelper;
 
-        public ExampleModule(ILogger<ExampleModule> logger, Images images, RanksHelper ranksHelper)
+        public ExampleModule(ILogger<ExampleModule> logger, Images images, ServerHelper serverHelper)
         {
             _logger = logger;
             _images = images;
-            _ranksHelper = ranksHelper;
+            _serverHelper = serverHelper;
         }
 
         [Command("ping")]
         public async Task PingAsync()
         {
             await ReplyAsync("Pong!");
+        }
+
+        [Command("image")]
+        public async Task ImageAsync()
+        {
+            string path = await _images.CreateImageAsync(Context.User as SocketGuildUser);
+            await Context.Channel.SendFileAsync(path);
+            File.Delete(path);
         }
 
         [Command("echo")]
@@ -55,7 +63,7 @@ namespace Template.Modules
         public async Task Rank([Remainder]string identifier)
         {
             await Context.Channel.TriggerTypingAsync();
-            var ranks = await _ranksHelper.GetRanksAsync(Context.Guild);
+            var ranks = await _serverHelper.GetRanksAsync(Context.Guild);
 
             IRole role;
 

@@ -69,6 +69,36 @@ namespace Infrastructure
             return await Task.FromResult(server.Welcome);
         }
 
+        public async Task ModifyLogsAsync(ulong id, ulong channelId)
+        {
+            var server = await _context.Servers
+                .FindAsync(id);
+
+            if (server == null)
+                _context.Add(new Server { Id = id, Logs = channelId });
+            else
+                server.Logs = channelId;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task ClearLogsAsync(ulong id)
+        {
+            var server = await _context.Servers
+                .FindAsync(id);
+
+            server.Logs = 0;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<ulong> GetLogsAsync(ulong id)
+        {
+            var server = await _context.Servers
+                .FindAsync(id);
+
+            return await Task.FromResult(server.Logs);
+        }
+
         public async Task ModifyBackgroundAsync(ulong id, string url)
         {
             var server = await _context.Servers

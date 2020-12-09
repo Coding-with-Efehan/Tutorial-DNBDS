@@ -42,5 +42,22 @@ namespace Template.Common
             var message = await channel.SendMessageAsync(embed: embed);
             return message;
         }
+
+        public static async Task<IMessage> SendLogAsync(this ITextChannel channel, string title, string description)
+        {
+            var embed = new EmbedBuilder()
+                .WithColor(new Color(26, 155, 226))
+                .WithDescription(description)
+                .WithAuthor(author =>
+                {
+                    author
+                    .WithIconUrl("https://i.imgur.com/gLR4k7d.png")
+                    .WithName(title);
+                })
+                .Build();
+            
+            var message = await channel.SendMessageAsync(embed: embed);
+            return message;
+        }
     }
 }
